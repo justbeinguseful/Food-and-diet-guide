@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Diet Compatibility Scorer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .diet-slider {
+            margin-bottom: 15px;
+        }
+        .diet-slider label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        .diet-slider input {
+            width: 200px;
+            vertical-align: middle;
+        }
+        .diet-slider span {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .score-cell {
+            font-weight: bold;
+            text-align: center;
+        }
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Food Diet Compatibility Scorer</h1>
+    
+    <div class="controls">
+        <h2>Weight Your Diet Preferences</h2>
+        <p>Adjust the sliders to indicate how important each diet type is to you (0 = Not important, 10 = Very important)</p>
+        
+        <div class="diet-slider">
+            <label for="vegan">Vegan:</label>
+            <input type="range" id="vegan" min="0" max="10" value="5">
+            <span id="vegan-value">5</span>
+        </div>
+        
+        <div class="diet-slider">
+            <label for="vegetarian">Vegetarian:</label>
+            <input type="range" id="vegetarian" min="0" max="10" value="5">
+            <span id="vegetarian-value">5</span>
+        </div>
+        
+        <div class="diet-slider">
+            <label for="keto">Keto:</label>
+            <input type="range" id="keto" min="0" max="10" value="5">
+            <span id="keto-value">5</span>
+        </div>
+        
+        <div class="diet-slider">
+            <label for="paleo">Paleo:</label>
+            <input type="range" id="paleo" min="0" max="10" value="5">
+            <span id="paleo-value">5</span>
+        </div>
+        
+        <div class="diet-slider">
+            <label for="gluten-free">Gluten-Free:</label>
+            <input type="range" id="gluten-free" min="0" max="10" value="5">
+            <span id="gluten-free-value">5</span>
+        </div>
+        
+        <div class="diet-slider">
+            <label for="dairy-free">Dairy-Free:</label>
+            <input type="range" id="dairy-free" min="0" max="10" value="5">
+            <span id="dairy-free-value">5</span>
+        </div>
+        
+        <button id="calculate">Calculate Scores</button>
+    </div>
+    
+    <input type="text" id="search" class="search-box" placeholder="Search for foods...">
+    
+    <table id="food-table">
+        <thead>
+            <tr>
+                <th data-sort="name">Food Item</th>
+                <th data-sort="vegan">Vegan</th>
+                <th data-sort="vegetarian">Vegetarian</th>
+                <th data-sort="keto">Keto</th>
+                <th data-sort="paleo">Paleo</th>
+                <th data-sort="glutenFree">Gluten-Free</th>
+                <th data-sort="dairyFree">Dairy-Free</th>
+                <th data-sort="score">Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Food data will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Food database with diet compatibility
+        // 1 = compatible, 0 = not compatible
+        const foods = [
+            { name: "Broccoli", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Chicken Breast", vegan: 0, vegetarian: 0, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Cheddar Cheese", vegan: 0, vegetarian: 1, keto: 1, paleo: 0, glutenFree: 1, dairyFree: 0 },
+            { name: "Lentils", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 1, dairyFree: 1 },
+            { name: "Salmon", vegan: 0, vegetarian: 0, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Quinoa", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 1, dairyFree: 1 },
+            { name: "Avocado", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Whole Wheat Bread", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 0, dairyFree: 1 },
+            { name: "Tofu", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 1, dairyFree: 1 },
+            { name: "Almonds", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Greek Yogurt", vegan: 0, vegetarian: 1, keto: 1, paleo: 0, glutenFree: 1, dairyFree: 0 },
+            { name: "Spinach", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Eggs", vegan: 0, vegetarian: 0, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Oats", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 0, dairyFree: 1 },
+            { name: "Beef", vegan: 0, vegetarian: 0, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Sweet Potato", vegan: 1, vegetarian: 1, keto: 0, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Butter", vegan: 0, vegetarian: 1, keto: 1, paleo: 0, glutenFree: 1, dairyFree: 0 },
+            { name: "Rice", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 1, dairyFree: 1 },
+            { name: "Kale", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Tomatoes", vegan: 1, vegetarian: 1, keto: 0, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Cauliflower", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Bacon", vegan: 0, vegetarian: 0, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Cashews", vegan: 1, vegetarian: 1, keto: 0, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Milk", vegan: 0, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 1, dairyFree: 0 },
+            { name: "Zucchini", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Pasta", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 0, dairyFree: 1 },
+            { name: "Olive Oil", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Black Beans", vegan: 1, vegetarian: 1, keto: 0, paleo: 0, glutenFree: 1, dairyFree: 1 },
+            { name: "Almond Milk", vegan: 1, vegetarian: 1, keto: 1, paleo: 1, glutenFree: 1, dairyFree: 1 },
+            { name: "Onions", vegan: 1, vegetarian: 1, keto: 0, paleo: 1, glutenFree: 1, dairyFree: 1 }
+        ];
+
+        // Get DOM elements
+        const sliders = document.querySelectorAll('input[type="range"]');
+        const calculateBtn = document.getElementById('calculate');
+        const foodTable = document.getElementById('food-table');
+        const searchBox = document.getElementById('search');
+        
+        // Update slider value displays
+        sliders.forEach(slider => {
+            slider.addEventListener('input', () => {
+                document.getElementById(`${slider.id}-value`).textContent = slider.value;
+            });
+        });
+        
+        // Calculate scores and update table
+        function calculateScores() {
+            // Get slider values
+            const weights = {
+                vegan: parseInt(document.getElementById('vegan').value),
+                vegetarian: parseInt(document.getElementById('vegetarian').value),
+                keto: parseInt(document.getElementById('keto').value),
+                paleo: parseInt(document.getElementById('paleo').value),
+                glutenFree: parseInt(document.getElementById('gluten-free').value),
+                dairyFree: parseInt(document.getElementById('dairy-free').value)
+            };
+            
+            // Calculate score for each food
+            const scoredFoods = foods.map(food => {
+                const score = 
+                    (food.vegan * weights.vegan) +
+                    (food.vegetarian * weights.vegetarian) +
+                    (food.keto * weights.keto) +
+                    (food.paleo * weights.paleo) +
+                    (food.glutenFree * weights.glutenFree) +
+                    (food.dairyFree * weights.dairyFree);
+                
+                return { ...food, score };
+            });
+            
+            // Sort by score (highest first)
+            scoredFoods.sort((a, b) => b.score - a.score);
+            
+            // Update table
+            updateTable(scoredFoods);
+        }
+        
+        // Update table with food data
+        function updateTable(foodData) {
+            const tbody = foodTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            const searchTerm = searchBox.value.toLowerCase();
+            
+            foodData.forEach(food => {
+                // Filter by search term if provided
+                if (searchTerm && !food.name.toLowerCase().includes(searchTerm)) {
+                    return;
+                }
+                
+                const row = document.createElement('tr');
+                
+                // Add food name
+                const nameCell = document.createElement('td');
+                nameCell.textContent = food.name;
+                row.appendChild(nameCell);
+                
+                // Add diet compatibility cells
+                const diets = ['vegan', 'vegetarian', 'keto', 'paleo', 'glutenFree', 'dairyFree'];
+                diets.forEach(diet => {
+                    const cell = document.createElement('td');
+                    cell.textContent = food[diet] ? '✓' : '✗';
+                    cell.style.textAlign = 'center';
+                    row.appendChild(cell);
+                });
+                
+                // Add score cell
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = food.score;
+                scoreCell.classList.add('score-cell');
+                row.appendChild(scoreCell);
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Sort table by column
+        function sortTable(column) {
+            return function() {
+                const tbody = foodTable.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                rows.sort((a, b) => {
+                    let aValue, bValue;
+                    
+                    if (column === 'name') {
+                        aValue = a.cells[0].textContent;
+                        bValue = b.cells[0].textContent;
+                        return aValue.localeCompare(bValue);
+                    } else if (column === 'score') {
+                        aValue = parseInt(a.cells[7].textContent);
+                        bValue = parseInt(b.cells[7].textContent);
+                        return bValue - aValue; // Descending for score
+                    } else {
+                        const index = ['name', 'vegan', 'vegetarian', 'keto', 'paleo', 'glutenFree', 'dairyFree', 'score'].indexOf(column);
+                        aValue = a.cells[index].textContent === '✓' ? 1 : 0;
+                        bValue = b.cells[index].textContent === '✓' ? 1 : 0;
+                        return bValue - aValue; // Descending
+                    }
+                });
+                
+                // Clear and re-append rows
+                tbody.innerHTML = '';
+                rows.forEach(row => tbody.appendChild(row));
+            };
+        }
+        
+        // Add event listeners
+        calculateBtn.addEventListener('click', calculateScores);
+        searchBox.addEventListener('input', calculateScores);
+        
+        // Add sorting functionality to table headers
+        const headers = foodTable.querySelectorAll('th');
+        headers.forEach(header => {
+            const column = header.getAttribute('data-sort');
+            header.addEventListener('click', sortTable(column));
+        });
+        
+        // Initial table population
+        calculateScores();
+    </script>
+</body>
+</html>
